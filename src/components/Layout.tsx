@@ -8,14 +8,14 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col font-sans">
       <Navbar />
       <main className="flex-1">{children}</main>
       <footer className="py-8 bg-secondary/40">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <h3 className="text-lg font-medium">Eventia</h3>
+              <h3 className="text-lg font-medium font-display">Eventia</h3>
               <p className="text-sm text-muted-foreground">Event management simplified</p>
             </div>
             <div className="flex space-x-6">

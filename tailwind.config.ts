@@ -74,7 +74,8 @@ export default {
         sm: 'calc(var(--radius) - 4px)'
       },
       fontFamily: {
-        sans: ['Inter var', 'sans-serif'],
+        sans: ['"Poppins"', 'Inter var', 'sans-serif'],
+        display: ['"Montserrat"', 'sans-serif'],
       },
       keyframes: {
         'accordion-down': {
