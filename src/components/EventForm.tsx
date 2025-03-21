@@ -8,12 +8,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, X, Image as ImageIcon } from 'lucide-react';
+import { CalendarIcon, Plus, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useAuth } from '@/context/AuthContext';
 
 export const EventForm: React.FC = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(undefined);
@@ -37,7 +40,7 @@ export const EventForm: React.FC = () => {
     setImages(newImages);
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Basic validation
@@ -45,10 +48,46 @@ export const EventForm: React.FC = () => {
       toast.error('Please fill in all required fields');
       return;
     }
-    
-    // Submit event logic would go here
-    toast.success('Event created successfully!');
-    navigate('/dashboard');
+
+    try {
+      setIsLoading(true);
+      
+      // Format the data for the API
+      const eventData = {
+        title,
+        description,
+        date: date?.toISOString(),
+        location,
+        category,
+        ticketPrice: Number(price),
+        capacity: Number(capacity),
+        image: images.length > 0 ? images[0] : undefined
+      };
+      
+      // Make the API request
+      const response = await fetch('http://localhost:5000/api/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(eventData)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create event');
+      }
+      
+      toast.success('Event created successfully!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create event');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   // Sample placeholder images
@@ -275,7 +314,16 @@ export const EventForm: React.FC = () => {
           <Button type="button" variant="outline" onClick={() => navigate('/dashboard')}>
             Cancel
           </Button>
-          <Button type="submit">Create Event</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Create Event'
+            )}
+          </Button>
         </div>
       </form>
     </div>

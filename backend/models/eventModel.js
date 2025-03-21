@@ -23,6 +23,9 @@ const eventSchema = new mongoose.Schema({
     type: String,
     default: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop'
   },
+  images: [{
+    type: String
+  }],
   category: {
     type: String,
     required: [true, 'Event category is required']
