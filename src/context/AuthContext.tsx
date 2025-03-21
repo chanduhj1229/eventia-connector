@@ -13,7 +13,7 @@ interface AuthContextType {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
-  login: (token: string, user: User) => void;
+  login: (userData: User) => void;
   logout: () => void;
   isOrganizer: () => boolean;
 }
@@ -50,10 +50,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = (newToken: string, userData: User) => {
-    localStorage.setItem('auth_token', newToken);
+  const login = (userData: User) => {
+    // Generate a simple mock token
+    const mockToken = `mock_token_${Date.now()}`;
+    localStorage.setItem('auth_token', mockToken);
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(newToken);
+    setToken(mockToken);
     setUser(userData);
     setIsAuthenticated(true);
   };

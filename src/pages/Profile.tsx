@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, token, login } = useAuth();
+  const { user, login } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState('');
@@ -38,39 +38,27 @@ const Profile = () => {
     setIsLoading(true);
     
     try {
-      const updateData: any = {
+      // Create updated user data (frontend-only)
+      const updatedUser = {
+        ...user!,
         name,
         email,
         profileImage
       };
       
-      if (newPassword) {
-        updateData.password = newPassword;
-      }
-      
-      const response = await fetch('http://localhost:5000/api/users/profile', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(updateData)
-      });
-      
-      const result = await response.json();
-      
-      if (response.ok) {
+      // Simulate network delay
+      setTimeout(() => {
+        // Update successful
+        login(updatedUser);
         toast.success('Profile updated successfully');
-        login(result.data.token, result.data);
         setNewPassword('');
         setConfirmPassword('');
-      } else {
-        toast.error(result.message || 'Failed to update profile');
-      }
+        setIsLoading(false);
+      }, 800);
+      
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('An error occurred while updating your profile');
-    } finally {
       setIsLoading(false);
     }
   };

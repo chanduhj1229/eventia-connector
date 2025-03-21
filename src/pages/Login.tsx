@@ -21,35 +21,26 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // Mock user data (frontend-only)
+      const mockUser = {
+        _id: `user_${Date.now()}`,
+        name: email.split('@')[0], // Use part of email as name
+        email: email,
+        role: 'user' // Default role
+      };
       
-      const result = await response.json();
-      
-      if (response.ok) {
+      // Simulate network delay
+      setTimeout(() => {
         // Login successful
-        login(result.data.token, result.data);
+        login(mockUser);
         toast.success('Login successful!');
-        
-        // Redirect based on role
-        if (result.data.role === 'organizer' || result.data.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/my-events');
-        }
-      } else {
-        // Login failed
-        toast.error(result.message || 'Login failed');
-      }
+        navigate('/my-events');
+        setIsLoading(false);
+      }, 800);
+      
     } catch (error) {
       toast.error('An error occurred. Please try again.');
       console.error('Login error:', error);
-    } finally {
       setIsLoading(false);
     }
   };
@@ -61,7 +52,7 @@ const Login = () => {
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
             <CardDescription>
-              Enter your email and password to access your account
+              Enter any email and password to access the demo
             </CardDescription>
           </CardHeader>
           <CardContent>

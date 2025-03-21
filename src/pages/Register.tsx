@@ -31,19 +31,18 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:5000/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, role }),
-      });
+      // Create mock user data (frontend-only)
+      const mockUser = {
+        _id: `user_${Date.now()}`,
+        name: name,
+        email: email,
+        role: role as 'user' | 'organizer' | 'admin'
+      };
       
-      const result = await response.json();
-      
-      if (response.ok) {
+      // Simulate network delay
+      setTimeout(() => {
         // Registration successful
-        login(result.data.token, result.data);
+        login(mockUser);
         toast.success('Registration successful!');
         
         // Redirect based on role
@@ -52,14 +51,12 @@ const Register = () => {
         } else {
           navigate('/my-events');
         }
-      } else {
-        // Registration failed
-        toast.error(result.message || 'Registration failed');
-      }
+        setIsLoading(false);
+      }, 800);
+      
     } catch (error) {
       toast.error('An error occurred. Please try again.');
       console.error('Registration error:', error);
-    } finally {
       setIsLoading(false);
     }
   };
