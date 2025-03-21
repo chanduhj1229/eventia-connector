@@ -1,12 +1,23 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated, user, logout, isOrganizer } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -20,6 +31,11 @@ export const Navbar: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header 
@@ -43,18 +59,74 @@ export const Navbar: React.FC = () => {
             <Link to="/browse" className="text-sm font-medium hover:text-primary/80 transition-colors">
               Browse Events
             </Link>
-            <Link to="/dashboard" className="text-sm font-medium hover:text-primary/80 transition-colors">
-              Dashboard
-            </Link>
-            <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" className="rounded-full">
-                <User className="h-4 w-4 mr-2" />
-                Sign In
-              </Button>
-              <Button size="sm" className="rounded-full">
-                Create Event
-              </Button>
-            </div>
+            
+            {isAuthenticated ? (
+              <>
+                {isOrganizer() ? (
+                  // Organizer Links
+                  <>
+                    <Link to="/dashboard" className="text-sm font-medium hover:text-primary/80 transition-colors">
+                      Organizer Dashboard
+                    </Link>
+                    <Link to="/create-event" className="text-sm font-medium hover:text-primary/80 transition-colors">
+                      Create Event
+                    </Link>
+                  </>
+                ) : (
+                  // Attendee Links
+                  <Link to="/my-events" className="text-sm font-medium hover:text-primary/80 transition-colors">
+                    My Events
+                  </Link>
+                )}
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="rounded-full p-0 h-10 w-10">
+                      <Avatar>
+                        <AvatarImage src={user?.profileImage} alt={user?.name} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {user?.name?.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <div className="px-2 py-1.5 text-sm font-medium">
+                      {user?.name}
+                    </div>
+                    <div className="px-2 py-1 text-xs text-muted-foreground">
+                      {user?.email}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">Profile</Link>
+                    </DropdownMenuItem>
+                    {isOrganizer() && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/dashboard" className="cursor-pointer">Dashboard</Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="flex items-center space-x-4">
+                <Button variant="outline" size="sm" className="rounded-full" asChild>
+                  <Link to="/login">
+                    <User className="h-4 w-4 mr-2" />
+                    Sign In
+                  </Link>
+                </Button>
+                <Button size="sm" className="rounded-full" asChild>
+                  <Link to="/register">Sign Up</Link>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -80,18 +152,56 @@ export const Navbar: React.FC = () => {
               <Link to="/browse" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
                 Browse Events
               </Link>
-              <Link to="/dashboard" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
-                Dashboard
-              </Link>
-              <div className="pt-6 flex flex-col space-y-4 w-full">
-                <Button variant="outline" className="w-full">
-                  <User className="h-4 w-4 mr-2" />
-                  Sign In
-                </Button>
-                <Button className="w-full">
-                  Create Event
-                </Button>
-              </div>
+              
+              {isAuthenticated ? (
+                <>
+                  {isOrganizer() ? (
+                    // Organizer Mobile Links
+                    <>
+                      <Link to="/dashboard" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                        Dashboard
+                      </Link>
+                      <Link to="/create-event" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                        Create Event
+                      </Link>
+                    </>
+                  ) : (
+                    // Attendee Mobile Links
+                    <Link to="/my-events" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                      My Events
+                    </Link>
+                  )}
+                  
+                  <Link to="/profile" className="text-lg font-medium" onClick={() => setIsMobileMenuOpen(false)}>
+                    Profile
+                  </Link>
+                  <Button 
+                    variant="destructive" 
+                    className="w-full" 
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </Button>
+                </>
+              ) : (
+                <div className="pt-6 flex flex-col space-y-4 w-full">
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>
+                      <User className="h-4 w-4 mr-2" />
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button className="w-full" asChild>
+                    <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>
+                      Sign Up
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         )}
