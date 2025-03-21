@@ -83,7 +83,20 @@ const MyEvents = () => {
                 {registeredEvents
                   .filter(event => new Date(event.date) >= new Date())
                   .map(event => (
-                    <EventCard key={event._id} event={event} />
+                    <EventCard 
+                      key={event._id}
+                      id={event._id}
+                      title={event.title}
+                      date={new Date(event.date).toLocaleDateString('en-US', { 
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                      location={event.location}
+                      image={event.image}
+                      category={event.category}
+                      attendees={0} // We don't have this information, defaulting to 0
+                    />
                   ))}
               </div>
             ) : (
@@ -105,7 +118,20 @@ const MyEvents = () => {
                 {registeredEvents
                   .filter(event => new Date(event.date) < new Date())
                   .map(event => (
-                    <EventCard key={event._id} event={event} />
+                    <EventCard 
+                      key={event._id}
+                      id={event._id}
+                      title={event.title}
+                      date={new Date(event.date).toLocaleDateString('en-US', { 
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                      location={event.location}
+                      image={event.image}
+                      category={event.category}
+                      attendees={0} // We don't have this information, defaulting to 0
+                    />
                   ))}
               </div>
             ) : (
