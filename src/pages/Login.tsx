@@ -26,7 +26,7 @@ const Login = () => {
         _id: `user_${Date.now()}`,
         name: email.split('@')[0], // Use part of email as name
         email: email,
-        role: 'user' as 'user' | 'organizer' | 'admin' // Specify the type explicitly
+        role: 'user' as const // Fix: Use 'as const' to ensure correct type
       };
       
       // Simulate network delay

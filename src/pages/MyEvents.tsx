@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCard } from '@/components/EventCard';
 import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 // Mock data for events
 const mockEvents = [
