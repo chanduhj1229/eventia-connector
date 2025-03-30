@@ -18,7 +18,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 // Configure CORS for our frontend
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite's default port
+  origin: '*', // In production, you should specify the exact origin
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
