@@ -51,7 +51,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (userData: User) => {
-    // Generate a simple mock token
+    // In a frontend-only mock version, we simply use a mock token
+    // In a real implementation, the token would come from the backend
     const mockToken = `mock_token_${Date.now()}`;
     localStorage.setItem('auth_token', mockToken);
     localStorage.setItem('user', JSON.stringify(userData));

@@ -1,167 +1,160 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCard } from '@/components/EventCard';
 import { useAuth } from '@/context/AuthContext';
-import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
 
-// Mock event data for frontend-only
+// Mock data for events
 const mockEvents = [
   {
-    _id: 'event1',
-    title: 'Tech Conference 2025',
-    description: 'A conference about the latest tech trends',
-    date: '2025-05-15T09:00:00.000Z',
+    _id: '1',
+    title: 'Tech Conference 2023',
+    date: new Date('2023-11-15'),
     location: 'San Francisco, CA',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-    category: 'Technology',
-    ticketPrice: 299,
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?q=80&w=2070&auto=format&fit=crop',
+    category: 'technology',
     organizer: {
       _id: 'org1',
-      name: 'Tech Events Inc',
-    }
+      name: 'Tech Events Inc.'
+    },
+    attendees: ['user1', 'user2', 'user3']
   },
   {
-    _id: 'event2',
-    title: 'Music Festival 2025',
-    description: 'A weekend of music and fun',
-    date: '2025-06-20T18:00:00.000Z',
+    _id: '2',
+    title: 'Music Festival',
+    date: new Date('2023-12-05'),
     location: 'Austin, TX',
-    image: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
-    category: 'Music',
-    ticketPrice: 150,
+    image: 'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?q=80&w=2070&auto=format&fit=crop',
+    category: 'music',
     organizer: {
       _id: 'org2',
-      name: 'Music Productions',
-    }
+      name: 'Festival Group'
+    },
+    attendees: ['user1']
   },
   {
-    _id: 'event3',
-    title: 'Food & Wine Festival',
-    description: 'Taste the best food and wine from local restaurants',
-    date: '2024-09-10T11:00:00.000Z', // Past event
+    _id: '3',
+    title: 'Food & Wine Expo',
+    date: new Date('2023-10-20'),
     location: 'New York, NY',
-    image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1174&q=80',
-    category: 'Food & Drink',
-    ticketPrice: 75,
+    image: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?q=80&w=2070&auto=format&fit=crop',
+    category: 'food',
     organizer: {
       _id: 'org3',
-      name: 'Culinary Events',
-    }
+      name: 'Culinary Arts'
+    },
+    attendees: ['user2', 'user3']
   }
 ];
 
 const MyEvents = () => {
-  const [registeredEvents, setRegisteredEvents] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
-
+  const [registeredEvents, setRegisteredEvents] = useState([]);
+  const [organizedEvents, setOrganizedEvents] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch events when component mounts
   useEffect(() => {
-    // Simulate fetching user events
-    const fetchUserEvents = () => {
-      setTimeout(() => {
-        setRegisteredEvents(mockEvents);
+    // Simulate API call for events data
+    const fetchEvents = async () => {
+      try {
+        // For a frontend-only version, we'll use mock data
+        setTimeout(() => {
+          if (user) {
+            // Filter registered events (this would normally come from the backend)
+            const registered = mockEvents.filter((_, index) => index % 2 === 0); // Just for demonstration
+            setRegisteredEvents(registered);
+            
+            // For organizers, set organized events
+            if (user.role === 'organizer' || user.role === 'admin') {
+              const organized = mockEvents.filter((_, index) => index % 2 === 1); // Just for demonstration
+              setOrganizedEvents(organized);
+            }
+          }
+          setIsLoading(false);
+        }, 800);
+      } catch (error) {
+        console.error('Error fetching events:', error);
         setIsLoading(false);
-      }, 1000);
+      }
     };
     
-    fetchUserEvents();
+    fetchEvents();
   }, [user]);
-
-  // Format the date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
+  
+  // Determine if user is an organizer
+  const isOrganizer = user && (user.role === 'organizer' || user.role === 'admin');
+  
   return (
     <Layout>
-      <div className="container mx-auto px-4 py-24">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Events</h1>
-          <p className="text-muted-foreground">
-            View and manage the events you're attending
-          </p>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-6">My Events</h1>
         
-        <Tabs defaultValue="upcoming" className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-            <TabsTrigger value="past">Past</TabsTrigger>
+        <Tabs defaultValue="registered" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="registered">Registered Events</TabsTrigger>
+            {isOrganizer && <TabsTrigger value="organized">My Organized Events</TabsTrigger>}
           </TabsList>
           
-          <TabsContent value="upcoming" className="space-y-4">
+          <TabsContent value="registered">
             {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : registeredEvents.filter(event => new Date(event.date) >= new Date()).length > 0 ? (
+              <div className="text-center py-8">Loading your events...</div>
+            ) : registeredEvents.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {registeredEvents
-                  .filter(event => new Date(event.date) >= new Date())
-                  .map(event => (
-                    <EventCard 
-                      key={event._id}
-                      id={event._id}
-                      title={event.title}
-                      date={formatDate(event.date)}
-                      location={event.location}
-                      image={event.image}
-                      category={event.category}
-                      organizerName={event.organizer.name}
-                      attendees={0}
-                    />
-                  ))}
+                {registeredEvents.map((event: any) => (
+                  <EventCard
+                    key={event._id}
+                    id={event._id}
+                    title={event.title}
+                    date={format(new Date(event.date), 'PPP')}
+                    location={event.location}
+                    image={event.image}
+                    category={event.category}
+                    attendees={event.attendees ? event.attendees.length : 0}
+                  />
+                ))}
               </div>
             ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">You haven't registered for any upcoming events yet.</p>
-                </CardContent>
-              </Card>
+              <div className="text-center py-8">
+                <p className="text-lg text-gray-600 mb-4">You haven't registered for any events yet.</p>
+                <Button asChild>
+                  <Link to="/browse">Browse Events</Link>
+                </Button>
+              </div>
             )}
           </TabsContent>
           
-          <TabsContent value="past" className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center items-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : registeredEvents.filter(event => new Date(event.date) < new Date()).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {registeredEvents
-                  .filter(event => new Date(event.date) < new Date())
-                  .map(event => (
-                    <EventCard 
+          {isOrganizer && (
+            <TabsContent value="organized">
+              {isLoading ? (
+                <div className="text-center py-8">Loading your organized events...</div>
+              ) : organizedEvents.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {organizedEvents.map((event: any) => (
+                    <EventCard
                       key={event._id}
                       id={event._id}
                       title={event.title}
-                      date={formatDate(event.date)}
+                      date={format(new Date(event.date), 'PPP')}
                       location={event.location}
                       image={event.image}
                       category={event.category}
-                      organizerName={event.organizer.name}
-                      attendees={0}
+                      attendees={event.attendees ? event.attendees.length : 0}
                     />
                   ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">You don't have any past events.</p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-lg text-gray-600 mb-4">You haven't organized any events yet.</p>
+                  <Button asChild>
+                    <Link to="/create-event">Create Event</Link>
+                  </Button>
+                </div>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </div>
     </Layout>
