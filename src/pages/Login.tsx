@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { api, isBackendAvailable } from '@/services/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -21,26 +22,45 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      // Mock user data (frontend-only)
-      const mockUser = {
-        _id: `user_${Date.now()}`,
-        name: email.split('@')[0], // Use part of email as name
-        email: email,
-        role: 'user' as const // Fix: Use 'as const' to ensure correct type
-      };
+      // Check if backend is available
+      const backendAvailable = await isBackendAvailable();
       
-      // Simulate network delay
-      setTimeout(() => {
-        // Login successful
-        login(mockUser);
-        toast.success('Login successful!');
-        navigate('/my-events');
-        setIsLoading(false);
-      }, 800);
-      
+      if (backendAvailable) {
+        // Backend is available, make real API call
+        const response = await api.auth.login(email, password);
+        
+        if (response && response.data) {
+          login(response.data);
+          toast.success('Login successful!');
+          
+          if (response.data.role === 'organizer' || response.data.role === 'admin') {
+            navigate('/dashboard');
+          } else {
+            navigate('/my-events');
+          }
+        }
+      } else {
+        // Mock user data (frontend-only)
+        const mockUser = {
+          _id: `user_${Date.now()}`,
+          name: email.split('@')[0], // Use part of email as name
+          email: email,
+          role: 'user' as const // Fix: Use 'as const' to ensure correct type
+        };
+        
+        // Simulate network delay
+        setTimeout(() => {
+          // Login successful
+          login(mockUser);
+          toast.success('Login successful! (Mock mode)');
+          navigate('/my-events');
+          setIsLoading(false);
+        }, 800);
+      }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'An error occurred. Please try again.');
       console.error('Login error:', error);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -52,7 +72,7 @@ const Login = () => {
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
             <CardDescription>
-              Enter any email and password to access the demo
+              Enter your credentials to sign in
             </CardDescription>
           </CardHeader>
           <CardContent>

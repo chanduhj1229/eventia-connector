@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { api, isBackendAvailable } from '@/services/api';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -31,32 +32,53 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Create mock user data (frontend-only)
-      const mockUser = {
-        _id: `user_${Date.now()}`,
-        name: name,
-        email: email,
-        role: role as 'user' | 'organizer' | 'admin'
-      };
+      // Check if backend is available
+      const backendAvailable = await isBackendAvailable();
       
-      // Simulate network delay
-      setTimeout(() => {
-        // Registration successful
-        login(mockUser);
-        toast.success('Registration successful!');
+      if (backendAvailable) {
+        // Backend is available, make real API call
+        const userData = { name, email, password, role };
+        const response = await api.auth.register(userData);
         
-        // Redirect based on role
-        if (role === 'organizer') {
-          navigate('/dashboard');
-        } else {
-          navigate('/my-events');
+        if (response && response.data) {
+          login(response.data);
+          toast.success('Registration successful!');
+          
+          // Redirect based on role
+          if (response.data.role === 'organizer' || response.data.role === 'admin') {
+            navigate('/dashboard');
+          } else {
+            navigate('/my-events');
+          }
         }
-        setIsLoading(false);
-      }, 800);
-      
+      } else {
+        // Create mock user data (frontend-only)
+        const mockUser = {
+          _id: `user_${Date.now()}`,
+          name: name,
+          email: email,
+          role: role as 'user' | 'organizer' | 'admin'
+        };
+        
+        // Simulate network delay
+        setTimeout(() => {
+          // Registration successful
+          login(mockUser);
+          toast.success('Registration successful! (Mock mode)');
+          
+          // Redirect based on role
+          if (role === 'organizer') {
+            navigate('/dashboard');
+          } else {
+            navigate('/my-events');
+          }
+          setIsLoading(false);
+        }, 800);
+      }
     } catch (error) {
-      toast.error('An error occurred. Please try again.');
+      toast.error(error instanceof Error ? error.message : 'An error occurred. Please try again.');
       console.error('Registration error:', error);
+    } finally {
       setIsLoading(false);
     }
   };

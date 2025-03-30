@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { useApi, isBackendAvailable } from '@/services/api';
+import { toast } from 'sonner';
 
 // Mock data for events
 const mockEvents = [
@@ -53,32 +55,53 @@ const mockEvents = [
 
 const MyEvents = () => {
   const { user } = useAuth();
+  const api = useApi();
   const [registeredEvents, setRegisteredEvents] = useState([]);
   const [organizedEvents, setOrganizedEvents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Fetch events when component mounts
   useEffect(() => {
-    // Simulate API call for events data
     const fetchEvents = async () => {
+      setIsLoading(true);
       try {
-        // For a frontend-only version, we'll use mock data
-        setTimeout(() => {
-          if (user) {
-            // Filter registered events (this would normally come from the backend)
-            const registered = mockEvents.filter((_, index) => index % 2 === 0); // Just for demonstration
-            setRegisteredEvents(registered);
+        // Check if backend is available
+        const backendAvailable = await isBackendAvailable();
+        
+        if (backendAvailable && user) {
+          // Get profile with events from backend
+          const profileData = await api.getProfile();
+          
+          if (profileData && profileData.data) {
+            // Set registered events
+            setRegisteredEvents(profileData.data.registeredEvents || []);
             
-            // For organizers, set organized events
+            // Set organized events if user is organizer
             if (user.role === 'organizer' || user.role === 'admin') {
-              const organized = mockEvents.filter((_, index) => index % 2 === 1); // Just for demonstration
-              setOrganizedEvents(organized);
+              setOrganizedEvents(profileData.data.events || []);
             }
           }
-          setIsLoading(false);
-        }, 800);
+        } else {
+          // Use mock data for frontend-only version
+          setTimeout(() => {
+            if (user) {
+              // Filter registered events (this would normally come from the backend)
+              const registered = mockEvents.filter((_, index) => index % 2 === 0); // Just for demonstration
+              setRegisteredEvents(registered);
+              
+              // For organizers, set organized events
+              if (user.role === 'organizer' || user.role === 'admin') {
+                const organized = mockEvents.filter((_, index) => index % 2 === 1); // Just for demonstration
+                setOrganizedEvents(organized);
+              }
+            }
+            setIsLoading(false);
+          }, 800);
+        }
       } catch (error) {
         console.error('Error fetching events:', error);
+        toast.error('Failed to load events');
+      } finally {
         setIsLoading(false);
       }
     };

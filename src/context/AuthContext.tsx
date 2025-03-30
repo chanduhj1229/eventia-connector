@@ -7,6 +7,7 @@ interface User {
   email: string;
   role: 'user' | 'organizer' | 'admin';
   profileImage?: string;
+  token?: string;
 }
 
 interface AuthContextType {
@@ -51,12 +52,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (userData: User) => {
-    // In a frontend-only mock version, we simply use a mock token
-    // In a real implementation, the token would come from the backend
-    const mockToken = `mock_token_${Date.now()}`;
-    localStorage.setItem('auth_token', mockToken);
+    // Store the token from the backend or create a mock one
+    const userToken = userData.token || `mock_token_${Date.now()}`;
+    
+    localStorage.setItem('auth_token', userToken);
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(mockToken);
+    
+    setToken(userToken);
     setUser(userData);
     setIsAuthenticated(true);
   };
