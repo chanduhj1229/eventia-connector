@@ -1,13 +1,9 @@
 
 # Eventia - Event Management Platform
 
-A full-stack application for managing events with separate frontend and backend services.
-
-## Project Structure
-
-This project is organized into two main folders:
+A streamlined event management platform with a clean two-folder structure:
 - `frontend/` - React client application
-- `backend/` - Express API server
+- `backend/` - Express API server with MongoDB
 
 ## Quick Start with Docker
 
@@ -16,42 +12,31 @@ This project is organized into two main folders:
 
 ### Running the Application
 1. Clone this repository
-2. Open a terminal in the project root directory
-3. Run the following command:
-
-```bash
-docker-compose up
-```
+2. Run the setup script to organize files into frontend and backend folders:
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+3. Start the application with Docker Compose:
+   ```bash
+   docker-compose up
+   ```
 
 This will:
 - Build and start the frontend container (accessible at http://localhost:8080)
 - Build and start the backend container (accessible at http://localhost:5000)
 - Start a MongoDB container for the database
 
-## Development Without Docker
+## Project Structure
 
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
+```
+eventia/
+├── frontend/         # React frontend application
+└── backend/          # Node.js Express backend with MongoDB
 ```
 
-### Backend
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-## Environment Variables
-
-### Frontend
-The frontend uses the following environment variables:
-- `VITE_API_URL` - URL of the backend API (default: http://localhost:5000/api)
-
-### Backend
-The backend uses the following environment variables:
-- `PORT` - Port for the server (default: 5000)
-- `MONGO_URI` - MongoDB connection string
-- `JWT_SECRET` - Secret for JWT token generation/validation
+## Features
+- Event creation and management for organizers
+- Registration system with seat capacity management
+- "House Full" indication when events reach capacity
+- User authentication and authorization
