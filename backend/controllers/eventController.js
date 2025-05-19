@@ -43,9 +43,16 @@ export const getEventById = async (req, res) => {
       });
     }
     
+    // Calculate available seats
+    const availableSeats = event.capacity - event.attendees.length;
+    
     res.status(200).json({
       status: 'success',
-      data: { event }
+      data: { 
+        event,
+        availableSeats,
+        isHouseFull: availableSeats <= 0
+      }
     });
   } catch (error) {
     res.status(500).json({
@@ -172,7 +179,8 @@ export const registerForEvent = async (req, res) => {
     if (event.attendees.length >= event.capacity) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Event is at full capacity'
+        message: 'This event is now full and not accepting new registrations',
+        isHouseFull: true
       });
     }
     
@@ -180,14 +188,50 @@ export const registerForEvent = async (req, res) => {
     event.attendees.push(req.user._id);
     await event.save();
     
-    // Add event to user's registered events
-    req.user.registeredEvents.push(event._id);
-    await req.user.save();
+    // Calculate available seats after registration
+    const availableSeats = event.capacity - event.attendees.length;
     
     res.status(200).json({
       status: 'success',
       message: 'Successfully registered for the event',
-      data: { event }
+      data: { 
+        event,
+        availableSeats,
+        isHouseFull: availableSeats <= 0
+      }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Get event capacity status
+export const getEventCapacityStatus = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    
+    if (!event) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Event not found'
+      });
+    }
+    
+    // Calculate available seats
+    const availableSeats = event.capacity - event.attendees.length;
+    const isHouseFull = availableSeats <= 0;
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        capacity: event.capacity,
+        attendeesCount: event.attendees.length,
+        availableSeats,
+        isHouseFull
+      }
     });
   } catch (error) {
     res.status(400).json({

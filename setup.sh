@@ -8,16 +8,29 @@ mkdir -p frontend/src/components frontend/src/context frontend/src/hooks fronten
 mkdir -p frontend/public
 mkdir -p backend/routes backend/controllers backend/models backend/middleware
 
-# Copy backend files
-echo "Copying backend files..."
-cp backend/.env backend/package.json backend/server.js backend/README.md backend/
-mkdir -p backend/routes backend/controllers backend/models backend/middleware
-cp -r backend/routes/* backend/routes/ 2>/dev/null || :
-cp -r backend/controllers/* backend/controllers/ 2>/dev/null || :
-cp -r backend/models/* backend/models/ 2>/dev/null || :
-cp -r backend/middleware/* backend/middleware/ 2>/dev/null || :
+# Backend setup
+echo "Setting up backend..."
+# Make sure package.json exists in backend folder
+if [ ! -f backend/package.json ]; then
+  cp backend/package.json backend/ 2>/dev/null || echo "Creating backend package.json..."
+fi
 
-# Create a simple package.json for frontend if it doesn't exist
+# Copy backend files
+cp backend/.env backend/ 2>/dev/null || echo "No .env file found, make sure to create one"
+cp backend/server.js backend/ 2>/dev/null || echo "No server.js file found, make sure to create one"
+
+# Create directories if they don't exist
+mkdir -p backend/routes backend/controllers backend/models backend/middleware
+
+# Copy files to directories
+cp -r backend/routes/* backend/routes/ 2>/dev/null || echo "No routes files found"
+cp -r backend/controllers/* backend/controllers/ 2>/dev/null || echo "No controller files found"
+cp -r backend/models/* backend/models/ 2>/dev/null || echo "No model files found"
+cp -r backend/middleware/* backend/middleware/ 2>/dev/null || echo "No middleware files found"
+
+# Frontend setup
+echo "Setting up frontend..."
+# Create a package.json for frontend if it doesn't exist
 if [ ! -f frontend/package.json ]; then
   echo "Creating package.json for frontend..."
   cat > frontend/package.json << EOF
@@ -60,29 +73,30 @@ fi
 
 # Copy frontend files
 echo "Copying frontend files..."
-cp -r src/components frontend/src/ 2>/dev/null || mkdir -p frontend/src/components
-cp -r src/context frontend/src/ 2>/dev/null || mkdir -p frontend/src/context
-cp -r src/hooks frontend/src/ 2>/dev/null || mkdir -p frontend/src/hooks
-cp -r src/lib frontend/src/ 2>/dev/null || mkdir -p frontend/src/lib
-cp -r src/pages frontend/src/ 2>/dev/null || mkdir -p frontend/src/pages
-cp -r src/services frontend/src/ 2>/dev/null || mkdir -p frontend/src/services
+mkdir -p frontend/src/components frontend/src/context frontend/src/hooks frontend/src/lib frontend/src/pages frontend/src/services
+mkdir -p frontend/public
+
+# Copy files with error handling
+cp -r src/components/* frontend/src/components/ 2>/dev/null || echo "No component files found"
+cp -r src/context/* frontend/src/context/ 2>/dev/null || echo "No context files found"
+cp -r src/hooks/* frontend/src/hooks/ 2>/dev/null || echo "No hook files found"
+cp -r src/lib/* frontend/src/lib/ 2>/dev/null || echo "No lib files found"
+cp -r src/pages/* frontend/src/pages/ 2>/dev/null || echo "No page files found"
+cp -r src/services/* frontend/src/services/ 2>/dev/null || echo "No service files found"
 
 # Copy other frontend files if they exist
-cp src/App.tsx frontend/src/ 2>/dev/null || :
-cp src/App.css frontend/src/ 2>/dev/null || :
-cp src/index.css frontend/src/ 2>/dev/null || :
-cp src/main.tsx frontend/src/ 2>/dev/null || :
-cp src/vite-env.d.ts frontend/src/ 2>/dev/null || :
-cp vite.config.ts frontend/ 2>/dev/null || :
-cp tailwind.config.ts frontend/ 2>/dev/null || :
-cp postcss.config.js frontend/ 2>/dev/null || :
+cp src/App.tsx frontend/src/ 2>/dev/null || echo "No App.tsx found"
+cp src/App.css frontend/src/ 2>/dev/null || echo "No App.css found"
+cp src/index.css frontend/src/ 2>/dev/null || echo "No index.css found"
+cp src/main.tsx frontend/src/ 2>/dev/null || echo "No main.tsx found"
+cp src/vite-env.d.ts frontend/src/ 2>/dev/null || echo "No vite-env.d.ts found"
+cp vite.config.ts frontend/ 2>/dev/null || echo "No vite.config.ts found"
+cp tailwind.config.ts frontend/ 2>/dev/null || echo "No tailwind.config.ts found"
+cp postcss.config.js frontend/ 2>/dev/null || echo "No postcss.config.js found"
 
 # Copy public assets
-cp -r public/* frontend/public/ 2>/dev/null || :
-
-# Make sure Dockerfiles are in the correct locations
-echo "Setting up Docker files..."
-# No need to copy Dockerfiles as they are already in their respective directories
+mkdir -p frontend/public
+cp -r public/* frontend/public/ 2>/dev/null || echo "No public files found"
 
 # Make the script executable
 chmod +x setup.sh

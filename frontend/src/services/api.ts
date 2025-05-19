@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/context/AuthContext';
 
 // Base URL for our API
@@ -120,6 +121,9 @@ export const api = {
           'Authorization': `Bearer ${token}`
         }
       });
+    },
+    getCapacityStatus: async (id: string) => {
+      return fetcher(`${API_URL}/events/${id}/capacity`);
     }
   }
 };
