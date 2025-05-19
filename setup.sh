@@ -1,7 +1,7 @@
 
 #!/bin/bash
 
-echo "Setting up project structure with only frontend and backend folders..."
+echo "Setting up project with frontend and backend folders..."
 
 # Create necessary directories
 mkdir -p frontend/src/components frontend/src/context frontend/src/hooks frontend/src/lib frontend/src/pages frontend/src/services

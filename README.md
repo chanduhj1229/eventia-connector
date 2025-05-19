@@ -27,13 +27,44 @@ This will:
 - Build and start the backend container (accessible at http://localhost:5000)
 - Start a MongoDB container for the database
 
-## Project Structure
+## Running Locally Without Docker
 
-```
-eventia/
-├── frontend/         # React frontend application
-└── backend/          # Node.js Express backend with MongoDB
-```
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+   The frontend will be accessible at http://localhost:8080
+
+### Backend Setup
+1. Navigate to the backend directory:
+   ```bash
+   cd backend
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the backend directory with the following variables:
+   ```
+   PORT=5000
+   MONGO_URI=mongodb://localhost:27017/eventia
+   JWT_SECRET=your_jwt_secret_key_here
+   ```
+4. Make sure you have MongoDB installed and running locally.
+5. Start the backend server:
+   ```bash
+   npm run dev
+   ```
+   The API will be accessible at http://localhost:5000
 
 ## Features
 - Event creation and management for organizers

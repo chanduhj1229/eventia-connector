@@ -1,18 +1,7 @@
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, DollarSign, TrendingUp } from 'lucide-react';
-
-// Sample data for statistics
-const attendanceData = [
-  { name: 'Jan', value: 400 },
-  { name: 'Feb', value: 300 },
-  { name: 'Mar', value: 500 },
-  { name: 'Apr', value: 280 },
-  { name: 'May', value: 590 },
-  { name: 'Jun', value: 800 },
-];
 
 interface StatCardProps {
   title: string;
@@ -78,38 +67,6 @@ export const Stats: React.FC = () => {
           trend={-3}
         />
       </div>
-
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <CardTitle>Attendance Overview</CardTitle>
-          <CardDescription>Monthly attendance across all events</CardDescription>
-        </CardHeader>
-        <CardContent className="p-0 pb-4">
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={attendanceData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '8px', 
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', 
-                    border: 'none' 
-                  }} 
-                />
-                <Bar 
-                  dataKey="value" 
-                  fill="currentColor" 
-                  className="text-primary/80" 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={40} 
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
