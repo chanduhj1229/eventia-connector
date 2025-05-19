@@ -2,8 +2,13 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
 
-// Generate JWT token
+// Generate JWT token with improved security
 const generateToken = (id) => {
+  if (!process.env.JWT_SECRET) {
+    console.error('JWT_SECRET is not defined in the environment variables');
+    throw new Error('JWT_SECRET is not configured');
+  }
+  
   return jwt.sign({ id }, process.env.JWT_SECRET, {
     expiresIn: '30d'
   });
@@ -13,6 +18,13 @@ const generateToken = (id) => {
 export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
+    
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Please provide name, email, and password'
+      });
+    }
     
     // Check if user already exists
     const userExists = await User.findOne({ email });
@@ -32,6 +44,9 @@ export const register = async (req, res) => {
     });
     
     if (user) {
+      // Generate token after successful user creation
+      const token = generateToken(user._id);
+      
       res.status(201).json({
         status: 'success',
         data: {
@@ -39,11 +54,12 @@ export const register = async (req, res) => {
           name: user.name,
           email: user.email,
           role: user.role,
-          token: generateToken(user._id)
+          token: token
         }
       });
     }
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(400).json({
       status: 'fail',
       message: error.message
@@ -56,16 +72,38 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
-    // Find user by email
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 'fail',
+        message: 'Please provide email and password'
+      });
+    }
+    
+    // Find user by email (explicitly include password for comparison)
     const user = await User.findOne({ email }).select('+password');
     
     // Check if user exists and password is correct
-    if (!user || !(await user.comparePassword(password))) {
+    if (!user) {
       return res.status(401).json({
         status: 'fail',
         message: 'Invalid email or password'
       });
     }
+    
+    // Compare passwords
+    const isPasswordCorrect = await user.comparePassword(password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({
+        status: 'fail',
+        message: 'Invalid email or password'
+      });
+    }
+    
+    // Generate token
+    const token = generateToken(user._id);
+    
+    // Remove password from response
+    user.password = undefined;
     
     // If everything is ok, send token to client
     res.status(200).json({
@@ -75,10 +113,11 @@ export const login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        token: generateToken(user._id)
+        token: token
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(400).json({
       status: 'fail',
       message: error.message
