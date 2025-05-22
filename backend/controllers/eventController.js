@@ -1,10 +1,11 @@
 
 import Event from '../models/eventModel.js';
+import Log from '../models/logModel.js';
 
 // Get all events
 export const getAllEvents = async (req, res) => {
   try {
-    const { category, location, date } = req.query;
+    const { category, location, date, organizerId } = req.query;
     let query = {};
     
     if (category) query.category = category;
@@ -12,6 +13,17 @@ export const getAllEvents = async (req, res) => {
     if (date) {
       const searchDate = new Date(date);
       query.date = { $gte: searchDate };
+    }
+    
+    // Filter by organizer if requested (for dashboard)
+    if (organizerId) {
+      query.organizer = organizerId;
+    } else if (req.user && (req.user.role === 'organizer' || req.user.role === 'admin')) {
+      // If user is organizer and on dashboard route, only show their events
+      const path = req.path || '';
+      if (path.includes('dashboard')) {
+        query.organizer = req.user._id;
+      }
     }
     
     const events = await Event.find(query).populate('organizer', 'name email');
@@ -71,6 +83,14 @@ export const createEvent = async (req, res) => {
     };
     
     const event = await Event.create(newEvent);
+    
+    // Create log entry for event creation
+    await Log.create({
+      eventId: event._id,
+      userId: req.user._id,
+      organizerId: req.user._id,
+      action: 'event_created',
+    });
     
     res.status(201).json({
       status: 'success',
@@ -188,6 +208,14 @@ export const registerForEvent = async (req, res) => {
     event.attendees.push(req.user._id);
     await event.save();
     
+    // Create log entry for user registration
+    await Log.create({
+      eventId: event._id,
+      userId: req.user._id,
+      organizerId: event.organizer,
+      action: 'user_registered',
+    });
+    
     // Calculate available seats after registration
     const availableSeats = event.capacity - event.attendees.length;
     
@@ -232,6 +260,45 @@ export const getEventCapacityStatus = async (req, res) => {
         availableSeats,
         isHouseFull
       }
+    });
+  } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Get event logs
+export const getEventLogs = async (req, res) => {
+  try {
+    const eventId = req.params.id;
+    
+    // Check if event exists
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'Event not found'
+      });
+    }
+    
+    // Check if user is authorized (organizer or admin)
+    if (event.organizer.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'You are not authorized to view these logs'
+      });
+    }
+    
+    // Get all logs for this event
+    const logs = await Log.find({ eventId })
+      .populate('userId', 'name email')
+      .sort({ timestamp: -1 });
+    
+    res.status(200).json({
+      status: 'success',
+      data: { logs }
     });
   } catch (error) {
     res.status(400).json({

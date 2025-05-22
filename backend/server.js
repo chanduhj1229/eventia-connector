@@ -34,6 +34,18 @@ app.get('/', (req, res) => {
   res.send('Eventia API is running');
 });
 
+// API route
+app.get('/api', (req, res) => {
+  res.json({ 
+    status: 'success',
+    message: 'Eventia API is running',
+    endpoints: {
+      events: '/api/events',
+      users: '/api/users'
+    }
+  });
+});
+
 // MongoDB connection with improved error handling
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

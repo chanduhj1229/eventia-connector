@@ -36,12 +36,14 @@ export const protect = async (req, res, next) => {
       req.user = currentUser;
       next();
     } catch (error) {
+      console.error('JWT Verification Error:', error.message);
       return res.status(401).json({
         status: 'fail',
         message: 'Invalid token. Please log in again.'
       });
     }
   } catch (error) {
+    console.error('Auth Middleware Error:', error);
     res.status(401).json({
       status: 'fail',
       message: 'Not authorized, token failed'

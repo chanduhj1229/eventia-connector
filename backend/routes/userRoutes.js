@@ -4,7 +4,8 @@ import {
   register, 
   login, 
   getUserProfile, 
-  updateUserProfile 
+  updateUserProfile,
+  getUserLogs
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -15,5 +16,8 @@ router.post('/login', login);
 router.route('/profile')
   .get(protect, getUserProfile)
   .patch(protect, updateUserProfile);
+
+// Logs endpoints
+router.get('/logs', protect, getUserLogs);
 
 export default router;

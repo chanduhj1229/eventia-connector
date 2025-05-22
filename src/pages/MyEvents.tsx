@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { EventCard } from '@/components/EventCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -58,6 +59,7 @@ const MyEvents = () => {
   const api = useApi();
   const [registeredEvents, setRegisteredEvents] = useState([]);
   const [organizedEvents, setOrganizedEvents] = useState([]);
+  const [registrationLogs, setRegistrationLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Fetch events when component mounts
@@ -81,6 +83,20 @@ const MyEvents = () => {
               setOrganizedEvents(profileData.data.events || []);
             }
           }
+          
+          // Fetch registration logs
+          const response = await fetch('http://localhost:5000/api/users/logs', {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+            }
+          });
+          
+          if (response.ok) {
+            const logsData = await response.json();
+            if (logsData.status === 'success') {
+              setRegistrationLogs(logsData.data.registrations || []);
+            }
+          }
         } else {
           // Use mock data for frontend-only version
           setTimeout(() => {
@@ -94,6 +110,24 @@ const MyEvents = () => {
                 const organized = mockEvents.filter((_, index) => index % 2 === 1); // Just for demonstration
                 setOrganizedEvents(organized);
               }
+              
+              // Mock registration logs
+              const mockLogs = [
+                {
+                  _id: 'log1',
+                  eventId: {
+                    _id: '1',
+                    title: 'Tech Conference 2023',
+                    date: new Date('2023-11-15'),
+                    location: 'San Francisco, CA'
+                  },
+                  organizerId: {
+                    name: 'Tech Events Inc.'
+                  },
+                  timestamp: new Date('2023-10-01')
+                }
+              ];
+              setRegistrationLogs(mockLogs);
             }
             setIsLoading(false);
           }, 800);
@@ -120,6 +154,7 @@ const MyEvents = () => {
         <Tabs defaultValue="registered" className="w-full">
           <TabsList className="mb-4">
             <TabsTrigger value="registered">Registered Events</TabsTrigger>
+            <TabsTrigger value="logs">Registration Logs</TabsTrigger>
             {isOrganizer && <TabsTrigger value="organized">My Organized Events</TabsTrigger>}
           </TabsList>
           
@@ -149,6 +184,53 @@ const MyEvents = () => {
                 </Button>
               </div>
             )}
+          </TabsContent>
+          
+          <TabsContent value="logs">
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Registration History</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="text-center py-8">Loading registration logs...</div>
+                ) : registrationLogs.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="text-left py-3 px-4">Event</th>
+                          <th className="text-left py-3 px-4">Organizer</th>
+                          <th className="text-left py-3 px-4">Registration Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {registrationLogs.map((log: any) => (
+                          <tr key={log._id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4">
+                              <Link to={`/event/${log.eventId._id}`} className="font-medium hover:underline">
+                                {log.eventId.title}
+                              </Link>
+                              <div className="text-sm text-muted-foreground">
+                                {log.eventId.location}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">{log.organizerId.name}</td>
+                            <td className="py-3 px-4">
+                              {format(new Date(log.timestamp), 'PPP p')}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No registration history found.</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
           
           {isOrganizer && (

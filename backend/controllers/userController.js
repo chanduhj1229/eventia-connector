@@ -1,6 +1,8 @@
 
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
+import Event from '../models/eventModel.js';
+import Log from '../models/logModel.js';
 
 // Generate JWT token with improved security
 const generateToken = (id) => {
@@ -128,11 +130,21 @@ export const login = async (req, res) => {
 // Get user profile
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id)
-      .populate('events')
-      .populate('registeredEvents');
+    const user = await User.findById(req.user._id);
     
     if (user) {
+      // Get user's events based on role
+      let events = [];
+      let registeredEvents = [];
+      
+      // If user is an organizer, get events they created
+      if (user.role === 'organizer' || user.role === 'admin') {
+        events = await Event.find({ organizer: user._id });
+      }
+      
+      // Get events user is registered for
+      registeredEvents = await Event.find({ attendees: user._id });
+      
       res.status(200).json({
         status: 'success',
         data: {
@@ -141,8 +153,8 @@ export const getUserProfile = async (req, res) => {
           email: user.email,
           role: user.role,
           profileImage: user.profileImage,
-          events: user.events,
-          registeredEvents: user.registeredEvents
+          events: events,
+          registeredEvents: registeredEvents
         }
       });
     } else {
@@ -193,6 +205,60 @@ export const updateUserProfile = async (req, res) => {
       });
     }
   } catch (error) {
+    res.status(400).json({
+      status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Get user logs
+export const getUserLogs = async (req, res) => {
+  try {
+    const user = req.user;
+    
+    // Different log types based on user role
+    if (user.role === 'organizer' || user.role === 'admin') {
+      // For organizers: get created events logs and registration logs for their events
+      const createdEventLogs = await Log.find({ 
+        organizerId: user._id,
+        action: 'event_created'
+      }).populate('eventId', 'title date location')
+        .populate('userId', 'name email')
+        .sort({ timestamp: -1 });
+      
+      const registrationLogs = await Log.find({ 
+        organizerId: user._id,
+        action: 'user_registered'
+      }).populate('eventId', 'title date location')
+        .populate('userId', 'name email')
+        .sort({ timestamp: -1 });
+      
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          createdEvents: createdEventLogs,
+          registrations: registrationLogs
+        }
+      });
+    } else {
+      // For attendees: get their registration logs
+      const attendeeLogs = await Log.find({ 
+        userId: user._id,
+        action: 'user_registered'
+      }).populate('eventId', 'title date location')
+        .populate('organizerId', 'name')
+        .sort({ timestamp: -1 });
+      
+      return res.status(200).json({
+        status: 'success',
+        data: {
+          registrations: attendeeLogs
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error fetching logs:', error);
     res.status(400).json({
       status: 'fail',
       message: error.message

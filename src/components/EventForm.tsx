@@ -12,10 +12,12 @@ import { CalendarIcon, Plus, X, Image as ImageIcon, Loader2 } from 'lucide-react
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '@/context/AuthContext';
+import { useApi } from '@/services/api';
 
 export const EventForm: React.FC = () => {
   const navigate = useNavigate();
   const { token } = useAuth();
+  const api = useApi();
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -64,21 +66,8 @@ export const EventForm: React.FC = () => {
         image: images.length > 0 ? images[0] : undefined
       };
       
-      // Make the API request
-      const response = await fetch('http://localhost:5000/api/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(eventData)
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to create event');
-      }
+      // Use the API service to create the event
+      await api.createEvent(eventData);
       
       toast.success('Event created successfully!');
       navigate('/dashboard');
