@@ -264,7 +264,7 @@ const Browse = () => {
         </div>
         
         {/* Load More Button */}
-        {filteredEvents.length > 0 && filteredEvents.length < allEvents.length && (
+        {filteredEvents.length > 0 && filteredEvents.length < events.length && (
           <div className="text-center mt-12">
             <Button variant="outline" size="lg">
               Load More Events
