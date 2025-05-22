@@ -7,7 +7,8 @@ import {
   updateEvent, 
   deleteEvent,
   registerForEvent,
-  getEventCapacityStatus
+  getEventCapacityStatus,
+  getEventLogs
 } from '../controllers/eventController.js';
 import { protect, restrictTo } from '../middleware/authMiddleware.js';
 
@@ -24,5 +25,6 @@ router.route('/:id')
 
 router.post('/:id/register', protect, registerForEvent);
 router.get('/:id/capacity', getEventCapacityStatus);
+router.get('/:id/logs', protect, restrictTo('organizer', 'admin'), getEventLogs);
 
 export default router;

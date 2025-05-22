@@ -1,3 +1,4 @@
+
 import { useAuth } from '@/context/AuthContext';
 
 // Base URL for our API
@@ -67,6 +68,14 @@ export const api = {
         },
         body: JSON.stringify(userData)
       });
+    },
+    getLogs: async (token: string) => {
+      return fetcher(`${API_URL}/users/logs`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
     }
   },
   
@@ -120,6 +129,17 @@ export const api = {
           'Authorization': `Bearer ${token}`
         }
       });
+    },
+    getCapacityStatus: async (id: string) => {
+      return fetcher(`${API_URL}/events/${id}/capacity`);
+    },
+    getLogs: async (token: string, id: string) => {
+      return fetcher(`${API_URL}/events/${id}/logs`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
     }
   }
 };
@@ -136,9 +156,11 @@ export const useApi = () => {
     // But we add some convenience methods that automatically use the token
     getProfile: () => api.auth.getProfile(token as string),
     updateProfile: (userData: any) => api.auth.updateProfile(token as string, userData),
+    getUserLogs: () => api.auth.getLogs(token as string),
     createEvent: (eventData: any) => api.events.create(token as string, eventData),
     updateEvent: (id: string, eventData: any) => api.events.update(token as string, id, eventData),
     deleteEvent: (id: string) => api.events.delete(token as string, id),
-    registerForEvent: (id: string) => api.events.register(token as string, id)
+    registerForEvent: (id: string) => api.events.register(token as string, id),
+    getEventLogs: (id: string) => api.events.getLogs(token as string, id)
   };
 };
