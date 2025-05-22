@@ -7,7 +7,7 @@ const API_URL = 'http://localhost:5000/api';
 // Helper function to detect if we're in frontend-only mode
 export const isBackendAvailable = async (): Promise<boolean> => {
   try {
-    const response = await fetch(`${API_URL}`);
+    const response = await fetch(`${API_URL}/events`);
     return response.ok;
   } catch (error) {
     console.log('Backend not available, using mock data');

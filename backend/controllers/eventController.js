@@ -18,10 +18,13 @@ export const getAllEvents = async (req, res) => {
     // Filter by organizer if requested (for dashboard)
     if (organizerId) {
       query.organizer = organizerId;
-    } else if (req.user && (req.user.role === 'organizer' || req.user.role === 'admin')) {
-      // If user is organizer and on dashboard route, only show their events
-      const path = req.path || '';
-      if (path.includes('dashboard')) {
+    }
+    
+    // If user is an organizer and making a request (not a public browse), only show their events
+    if (req.user && req.user.role === 'organizer') {
+      // Only restrict if it's not the public browse endpoint (which doesn't have auth)
+      // Check if the request comes through the auth middleware
+      if (req.originalUrl.includes('dashboard') || req.headers.authorization) {
         query.organizer = req.user._id;
       }
     }
@@ -52,6 +55,15 @@ export const getEventById = async (req, res) => {
       return res.status(404).json({
         status: 'fail',
         message: 'Event not found'
+      });
+    }
+    
+    // If user is organizer, check if they're the event organizer
+    if (req.user && req.user.role === 'organizer' && 
+        event.organizer._id.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'You can only view details of events you organize'
       });
     }
     
@@ -184,6 +196,14 @@ export const registerForEvent = async (req, res) => {
       return res.status(404).json({
         status: 'fail',
         message: 'Event not found'
+      });
+    }
+    
+    // Prevent organizers from registering for events
+    if (req.user.role === 'organizer') {
+      return res.status(403).json({
+        status: 'fail',
+        message: 'Organizers cannot register for events'
       });
     }
     

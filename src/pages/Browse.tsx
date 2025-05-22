@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
@@ -13,9 +12,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { api, isBackendAvailable } from '@/services/api';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
-// Sample events data
-const allEvents: EventCardProps[] = [
+// Sample events data for fallback
+const mockEvents = [
   {
     id: '1',
     title: 'Tech Conference 2023',
@@ -97,42 +99,75 @@ const Browse = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('date');
   
-  // Simulate loading data
+  // Fetch real events from API
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setEvents(allEvents);
-      setLoading(false);
-    }, 1000);
+    const fetchEvents = async () => {
+      setLoading(true);
+      try {
+        // Check if backend is available
+        const backendAvailable = await isBackendAvailable();
+        
+        if (backendAvailable) {
+          // Build filter parameters
+          const filters: any = {};
+          
+          const category = searchParams.get('category');
+          const location = searchParams.get('location');
+          const date = searchParams.get('date');
+          
+          if (category) filters.category = category;
+          if (location) filters.location = location;
+          if (date) filters.date = date;
+          
+          // Fetch events from API
+          const response = await api.events.getAll(filters);
+          
+          if (response && response.status === 'success') {
+            const apiEvents = response.data.events.map((event: any) => ({
+              id: event._id,
+              title: event.title,
+              date: format(new Date(event.date), 'PPP'),
+              location: event.location,
+              image: event.image,
+              category: event.category,
+              attendees: event.attendees ? event.attendees.length : 0,
+            }));
+            
+            setEvents(apiEvents);
+            setFilteredEvents(apiEvents);
+          }
+        } else {
+          // Use mock data if backend is not available
+          setTimeout(() => {
+            setEvents(mockEvents);
+            setFilteredEvents(mockEvents);
+            setLoading(false);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        toast.error('Failed to load events');
+        setEvents(mockEvents);
+        setFilteredEvents(mockEvents);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    return () => clearTimeout(timer);
-  }, []);
+    fetchEvents();
+  }, [searchParams]);
   
-  // Apply filters based on search params
+  // Apply filters and sorting
   useEffect(() => {
     if (events.length === 0) return;
     
     let filtered = [...events];
     
     const query = searchParams.get('q');
-    const location = searchParams.get('location');
-    const category = searchParams.get('category');
-    const date = searchParams.get('date');
     
     if (query) {
       filtered = filtered.filter(event => 
         event.title.toLowerCase().includes(query.toLowerCase())
-      );
-    }
-    
-    if (location) {
-      filtered = filtered.filter(event => 
-        event.location.toLowerCase().includes(location.toLowerCase())
-      );
-    }
-    
-    if (category) {
-      filtered = filtered.filter(event => 
-        event.category.toLowerCase() === category.toLowerCase()
       );
     }
     
