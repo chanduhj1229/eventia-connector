@@ -19,21 +19,28 @@ export const protect = async (req, res, next) => {
       });
     }
     
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Check if user still exists
-    const currentUser = await User.findById(decoded.id);
-    if (!currentUser) {
+    try {
+      // Verify token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Check if user still exists
+      const currentUser = await User.findById(decoded.id);
+      if (!currentUser) {
+        return res.status(401).json({
+          status: 'fail',
+          message: 'The user belonging to this token no longer exists.'
+        });
+      }
+      
+      // Grant access to protected route
+      req.user = currentUser;
+      next();
+    } catch (error) {
       return res.status(401).json({
         status: 'fail',
-        message: 'The user belonging to this token no longer exists.'
+        message: 'Invalid token. Please log in again.'
       });
     }
-    
-    // Grant access to protected route
-    req.user = currentUser;
-    next();
   } catch (error) {
     res.status(401).json({
       status: 'fail',

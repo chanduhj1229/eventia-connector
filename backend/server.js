@@ -34,7 +34,7 @@ app.get('/', (req, res) => {
   res.send('Eventia API is running');
 });
 
-// MongoDB connection
+// MongoDB connection with improved error handling
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log('MongoDB connected successfully');
@@ -44,4 +44,10 @@ mongoose.connect(process.env.MONGO_URI)
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error);
+    process.exit(1); // Exit with failure code on connection error
   });
+
+// Handle MongoDB connection events
+const db = mongoose.connection;
+db.on('error', (error) => console.error('MongoDB error:', error));
+db.once('open', () => console.log('MongoDB connection established'));
