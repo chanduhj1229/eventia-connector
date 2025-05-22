@@ -1,6 +1,7 @@
 
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js';
+import Log from '../models/logModel.js';
 
 // Generate JWT token with improved security
 const generateToken = (id) => {
@@ -195,6 +196,46 @@ export const updateUserProfile = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       status: 'fail',
+      message: error.message
+    });
+  }
+};
+
+// Get user logs (events created and registrations)
+export const getUserLogs = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    
+    // For organizers: find events they've created
+    const createdEventLogs = req.user.role === 'organizer' || req.user.role === 'admin' 
+      ? await Log.find({ 
+          organizerId: userId,
+          action: 'event_created' 
+        })
+        .populate('eventId', 'title date location')
+        .sort({ timestamp: -1 })
+      : [];
+    
+    // For all users: find events they've registered for
+    const registrationLogs = await Log.find({ 
+        userId: userId,
+        action: 'user_registered'
+      })
+      .populate('eventId', 'title date location')
+      .populate('organizerId', 'name')
+      .sort({ timestamp: -1 });
+    
+    res.status(200).json({
+      status: 'success',
+      data: {
+        createdEvents: createdEventLogs,
+        registrations: registrationLogs
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching user logs:', error);
+    res.status(500).json({
+      status: 'error',
       message: error.message
     });
   }

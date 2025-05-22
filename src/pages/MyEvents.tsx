@@ -85,17 +85,10 @@ const MyEvents = () => {
           }
           
           // Fetch registration logs
-          const response = await fetch('http://localhost:5000/api/users/logs', {
-            headers: {
-              'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-            }
-          });
+          const logsData = await api.getUserLogs();
           
-          if (response.ok) {
-            const logsData = await response.json();
-            if (logsData.status === 'success') {
-              setRegistrationLogs(logsData.data.registrations || []);
-            }
+          if (logsData && logsData.status === 'success') {
+            setRegistrationLogs(logsData.data.registrations || []);
           }
         } else {
           // Use mock data for frontend-only version

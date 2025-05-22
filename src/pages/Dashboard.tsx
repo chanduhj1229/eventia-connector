@@ -23,21 +23,12 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/users/logs', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-          }
-        });
+        setIsLoading(true);
+        const response = await api.getUserLogs();
         
-        if (!response.ok) {
-          throw new Error('Failed to fetch logs');
-        }
-        
-        const data = await response.json();
-        
-        if (data.status === 'success') {
-          setEventLogs(data.data.createdEvents || []);
-          setRegistrationLogs(data.data.registrations || []);
+        if (response && response.status === 'success') {
+          setEventLogs(response.data.createdEvents || []);
+          setRegistrationLogs(response.data.registrations || []);
         }
       } catch (error) {
         console.error('Error fetching logs:', error);
@@ -155,7 +146,7 @@ const Dashboard = () => {
                                     {log.eventId.title}
                                   </Link>
                                 </td>
-                                <td className="py-3 px-4">{log.userId.name}</td>
+                                <td className="py-3 px-4">{log.userId?.name}</td>
                                 <td className="py-3 px-4">
                                   {format(new Date(log.timestamp), 'PPP p')}
                                 </td>
